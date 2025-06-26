@@ -1,7 +1,10 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaClient } from '@prisma/client';
+import { RpcException } from '@nestjs/microservices';
+import { isUUID } from 'class-validator';
+import { isUndefined } from 'util';
 
 @Injectable()
 export class OrdersService extends PrismaClient implements OnModuleInit {
@@ -12,15 +15,38 @@ export class OrdersService extends PrismaClient implements OnModuleInit {
   } 
   
   create(createOrderDto: CreateOrderDto) {
-    return 'This action adds a new order';
-  }
+  return this.order.create({
+    data: createOrderDto,
+  });
+}
 
   findAll() {
     return `This action returns all orders`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} order`;
+  async findOne(id: string) {
+    if (!id || !isUUID(id) || id 
+    === undefined) {
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: ['The id must be a valid UUID'],
+        error: 'Bad Request',
+      });
+    }
+    console.log('findOne from order ms servise.ts', id);
+    const order = await this.order.findUnique({
+      where: { id }, // Prisma entiende que `id` es UUID si tu modelo lo define así
+    });
+
+    if (!order) {
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: [`Order with id ${id} not found`],
+        error: 'Not Found',
+      });
+    }
+
+    return order;
   }
 
   changeOrderStatus(updateOrderDto: UpdateOrderDto) {
