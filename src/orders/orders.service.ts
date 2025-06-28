@@ -33,12 +33,13 @@ export class OrdersService extends PrismaClient implements OnModuleInit {
         error: 'Bad Request',
       });
     }
-    console.log('findOne from order ms servise.ts', id);
+    
     const order = await this.order.findUnique({
       where: { id }, // Prisma entiende que `id` es UUID si tu modelo lo define así
     });
 
     if (!order) {
+      this.logger.log(`Order with id ${id} not found`);
       throw new RpcException({
         statusCode: HttpStatus.NOT_FOUND,
         message: [`Order with id ${id} not found`],

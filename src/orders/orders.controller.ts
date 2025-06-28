@@ -23,17 +23,23 @@ export class OrdersController {
     return this.ordersService.findAll();
   }
 
-  @MessagePattern('findOneOrder')
-  findOne(@Payload('id' , ParseUUIDPipe) id: string) {
-    this.logger.log('findOne from MS controller', id);
+@MessagePattern('findOneOrder')
+async findOne(@Payload('id', ParseUUIDPipe) id: string) {
+  //this.logger.log('findOne from MS controller', id);
 
-    return this.ordersService.findOne(id);
-  }
+  const result = await this.ordersService.findOne(id); // 👈 ejecutas la lógica
+  console.log('MS returning order:', {result}); // 👈 lo imprimes
+
+  return result; // 👈 lo devuelves como siempre
+}
+
 
   @MessagePattern('changeOrderStatus')
   changeOrderStatus(@Payload() updateOrderDto: UpdateOrderDto) {
     throw new NotImplementedException();
   }
 }
+
+
 
 
